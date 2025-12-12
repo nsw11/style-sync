@@ -131,7 +131,13 @@ const OutfitBuilder = () => {
 
     // If "I wore this outfit" is checked, log wear for outfit and all items
     if (logWearOnSave && newOutfit) {
-      const itemIds = logOutfitWear(newOutfit.id, fitPic || undefined);
+      // Get item IDs directly from selectedItems since the outfit state hasn't updated yet
+      const itemIds = Object.values(selectedItems).filter(Boolean) as string[];
+      
+      // Log outfit wear (this updates outfit state)
+      logOutfitWear(newOutfit.id, fitPic || undefined);
+      
+      // Log wear for each item
       itemIds.forEach(id => logWear(id, newOutfit.id));
       
       toast({ 
