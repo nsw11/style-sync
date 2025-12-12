@@ -60,9 +60,7 @@ export function AppLayout({ children, title, subtitle, actions }: AppLayoutProps
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-foreground">ThreadCount</h1>
-                {subtitle && (
-                  <p className="text-sm text-muted-foreground">{subtitle}</p>
-                )}
+                <p className="text-sm text-muted-foreground">Wear it or waste it</p>
               </div>
             </div>
             {actions && <div className="flex items-center gap-2">{actions}</div>}
