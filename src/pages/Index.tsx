@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Shirt } from 'lucide-react';
+import { Shirt, Plus } from 'lucide-react';
 import { useClothingStore } from '@/hooks/useClothingStore';
 import { AddClothingDialog } from '@/components/clothing/AddClothingDialog';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
 import { FilterBar } from '@/components/clothing/FilterBar';
 import { EmptyState } from '@/components/clothing/EmptyState';
+import { Button } from '@/components/ui/button';
 import { ClothingItem, SortOption, ViewMode, FilterState } from '@/types/clothing';
 import { cn } from '@/lib/utils';
 
@@ -104,12 +105,6 @@ const Index = () => {
     if (!open) setEditItem(null);
   };
 
-  // Get unique subcategories from items for filter options
-  const availableSubcategories = useMemo(() => {
-    const subcats = new Set(items.map(item => item.subcategory));
-    return Array.from(subcats).sort();
-  }, [items]);
-
   const isFiltered = searchQuery || filters.categories.length > 0 || filters.subcategories.length > 0 || filters.hasCost !== 'all';
 
   if (!isLoaded) {
@@ -140,6 +135,11 @@ const Index = () => {
               </div>
             </div>
 
+            <Button onClick={() => setShowAddDialog(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Item</span>
+            </Button>
+
             <AddClothingDialog
               onAdd={addItem}
               getSubcategoriesForCategory={getSubcategoriesForCategory}
@@ -148,6 +148,7 @@ const Index = () => {
               onUpdate={updateItem}
               open={showAddDialog}
               onOpenChange={handleCloseDialog}
+              triggerButton={false}
             />
           </div>
         </div>
@@ -165,7 +166,7 @@ const Index = () => {
               onViewModeChange={setViewMode}
               filters={filters}
               onFiltersChange={setFilters}
-              availableSubcategories={availableSubcategories}
+              items={items}
             />
           </div>
         )}
