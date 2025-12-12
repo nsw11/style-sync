@@ -27,6 +27,7 @@ interface FilterBarProps {
   onViewModeChange: (mode: ViewMode) => void;
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
+  availableSubcategories: string[];
 }
 
 const sortOptions: { value: SortOption; label: string }[] = [
@@ -49,14 +50,22 @@ export function FilterBar({
   onViewModeChange,
   filters,
   onFiltersChange,
+  availableSubcategories,
 }: FilterBarProps) {
-  const activeFilterCount = filters.categories.length + (filters.hasCost !== 'all' ? 1 : 0);
+  const activeFilterCount = filters.categories.length + filters.subcategories.length + (filters.hasCost !== 'all' ? 1 : 0);
 
   const toggleCategory = (category: Category) => {
     const newCategories = filters.categories.includes(category)
       ? filters.categories.filter(c => c !== category)
       : [...filters.categories, category];
     onFiltersChange({ ...filters, categories: newCategories });
+  };
+
+  const toggleSubcategory = (subcategory: string) => {
+    const newSubcategories = filters.subcategories.includes(subcategory)
+      ? filters.subcategories.filter(s => s !== subcategory)
+      : [...filters.subcategories, subcategory];
+    onFiltersChange({ ...filters, subcategories: newSubcategories });
   };
 
   const clearFilters = () => {
@@ -140,6 +149,26 @@ export function FilterBar({
                   ))}
                 </div>
               </div>
+
+              {availableSubcategories.length > 0 && (
+                <div>
+                  <Label className="text-sm mb-2 block">Subcategories</Label>
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {availableSubcategories.map((subcategory) => (
+                      <label
+                        key={subcategory}
+                        className="flex items-center gap-2 text-sm cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={filters.subcategories.includes(subcategory)}
+                          onCheckedChange={() => toggleSubcategory(subcategory)}
+                        />
+                        {subcategory}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <Label className="text-sm mb-2 block">Cost Data</Label>

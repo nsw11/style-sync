@@ -51,6 +51,11 @@ const Index = () => {
       result = result.filter((item) => filters.categories.includes(item.category));
     }
 
+    // Subcategory filter
+    if (filters.subcategories.length > 0) {
+      result = result.filter((item) => filters.subcategories.includes(item.subcategory));
+    }
+
     // Cost filter
     if (filters.hasCost === 'with') {
       result = result.filter((item) => item.cost !== undefined);
@@ -99,7 +104,13 @@ const Index = () => {
     if (!open) setEditItem(null);
   };
 
-  const isFiltered = searchQuery || filters.categories.length > 0 || filters.hasCost !== 'all';
+  // Get unique subcategories from items for filter options
+  const availableSubcategories = useMemo(() => {
+    const subcats = new Set(items.map(item => item.subcategory));
+    return Array.from(subcats).sort();
+  }, [items]);
+
+  const isFiltered = searchQuery || filters.categories.length > 0 || filters.subcategories.length > 0 || filters.hasCost !== 'all';
 
   if (!isLoaded) {
     return (
@@ -154,6 +165,7 @@ const Index = () => {
               onViewModeChange={setViewMode}
               filters={filters}
               onFiltersChange={setFilters}
+              availableSubcategories={availableSubcategories}
             />
           </div>
         )}
