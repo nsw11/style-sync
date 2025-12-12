@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Outfit } from '@/types/clothing';
+import { Outfit, OutfitWearLog, OutfitSection } from '@/types/clothing';
 
 const STORAGE_KEY = 'clothing-tracker-outfits';
 
@@ -14,6 +14,11 @@ export function useOutfitStore() {
       const parsed = JSON.parse(stored);
       setOutfits(parsed.map((outfit: Outfit) => ({
         ...outfit,
+        wearCount: outfit.wearCount || 0,
+        wearLogs: (outfit.wearLogs || []).map((log: OutfitWearLog) => ({
+          ...log,
+          date: new Date(log.date),
+        })),
         createdAt: new Date(outfit.createdAt),
         updatedAt: new Date(outfit.updatedAt),
       })));
@@ -28,10 +33,12 @@ export function useOutfitStore() {
     }
   }, [outfits, isLoaded]);
 
-  const addOutfit = useCallback((outfit: Omit<Outfit, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addOutfit = useCallback((outfit: Omit<Outfit, 'id' | 'createdAt' | 'updatedAt' | 'wearCount' | 'wearLogs'>) => {
     const newOutfit: Outfit = {
       ...outfit,
       id: crypto.randomUUID(),
+      wearCount: 0,
+      wearLogs: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -51,11 +58,38 @@ export function useOutfitStore() {
     setOutfits(prev => prev.filter(outfit => outfit.id !== id));
   }, []);
 
+  const logOutfitWear = useCallback((id: string, photo?: string): string[] => {
+    const wearLog: OutfitWearLog = {
+      id: crypto.randomUUID(),
+      date: new Date(),
+      photo,
+    };
+    
+    let itemIds: string[] = [];
+    
+    setOutfits(prev => prev.map(outfit => {
+      if (outfit.id === id) {
+        // Collect item IDs from the outfit
+        itemIds = Object.values(outfit.items).filter(Boolean) as string[];
+        return {
+          ...outfit,
+          wearCount: (outfit.wearCount || 0) + 1,
+          wearLogs: [...(outfit.wearLogs || []), wearLog],
+          updatedAt: new Date(),
+        };
+      }
+      return outfit;
+    }));
+    
+    return itemIds;
+  }, []);
+
   return {
     outfits,
     isLoaded,
     addOutfit,
     updateOutfit,
     deleteOutfit,
+    logOutfitWear,
   };
 }
