@@ -4,7 +4,6 @@ import { Shirt, ArrowLeft, Save, Plus } from 'lucide-react';
 import { useClothingStore } from '@/hooks/useClothingStore';
 import { useOutfitStore } from '@/hooks/useOutfitStore';
 import { OutfitSectionCard } from '@/components/outfit/OutfitSectionCard';
-import { OutfitPreview } from '@/components/outfit/OutfitPreview';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -179,61 +178,41 @@ const OutfitBuilder = () => {
         </div>
       </header>
 
-      <main className="container max-w-6xl mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-[1fr_280px] gap-6">
-          <div className="space-y-3">
-            {/* Outfit Grid - 4 rows x 3 columns */}
-            {OUTFIT_GRID.map((row, rowIndex) => (
-              <div key={rowIndex} className="grid grid-cols-3 gap-3">
-                {row.map((section, colIndex) => {
-                  // Handle empty cell
-                  if (!section) {
-                    // Row 4, Col 3 - Add accessory button
-                    if (rowIndex === 3 && colIndex === 2) {
-                      return (
-                        <div key="add-accessory" className="glass-card rounded-xl p-3 flex flex-col items-center justify-center">
-                          <p className="text-xs text-muted-foreground mb-2 text-center">Add Accessories</p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleAddAccessory}
-                            disabled={additionalAccessoryCount >= 3}
-                            className="gap-1"
-                          >
-                            <Plus className="w-4 h-4" />
-                            Add ({additionalAccessoryCount}/3)
-                          </Button>
-                        </div>
-                      );
-                    }
-                    // Empty placeholder (Row 1, Col 1)
+      <main className="container max-w-4xl mx-auto px-4 py-6">
+        <div className="space-y-3">
+          {/* Outfit Grid - 4 rows x 3 columns */}
+          {OUTFIT_GRID.map((row, rowIndex) => (
+            <div key={rowIndex} className="grid grid-cols-3 gap-3">
+              {row.map((section, colIndex) => {
+                // Handle empty cell
+                if (!section) {
+                  // Row 4, Col 3 - Add accessory button
+                  if (rowIndex === 3 && colIndex === 2) {
                     return (
-                      <div key={`empty-${rowIndex}-${colIndex}`} className="glass-card rounded-xl p-3 opacity-30 flex items-center justify-center">
-                        <span className="text-xs text-muted-foreground">—</span>
+                      <div key="add-accessory" className="glass-card rounded-xl p-3 flex flex-col items-center justify-center">
+                        <p className="text-xs text-muted-foreground mb-2 text-center">Add Accessories</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAddAccessory}
+                          disabled={additionalAccessoryCount >= 3}
+                          className="gap-1"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add ({additionalAccessoryCount}/3)
+                        </Button>
                       </div>
                     );
                   }
-
+                  // Empty placeholder (Row 1, Col 1)
                   return (
-                    <OutfitSectionCard
-                      key={section.id}
-                      section={section}
-                      items={getItemsForSection(section)}
-                      selectedItemId={selectedItems[section.id]}
-                      onSelect={(itemId) => handleSelectItem(section.id, itemId)}
-                      sortOption={sortOptions[section.id]}
-                      onSortChange={(sort) => handleSortChange(section.id, sort)}
-                      compact
-                    />
+                    <div key={`empty-${rowIndex}-${colIndex}`} className="glass-card rounded-xl p-3 opacity-30 flex items-center justify-center">
+                      <span className="text-xs text-muted-foreground">—</span>
+                    </div>
                   );
-                })}
-              </div>
-            ))}
+                }
 
-            {/* Additional Accessories Row */}
-            {additionalAccessoryCount > 0 && (
-              <div className="grid grid-cols-3 gap-3">
-                {ADDITIONAL_ACCESSORY_SECTIONS.slice(0, additionalAccessoryCount).map((section) => (
+                return (
                   <OutfitSectionCard
                     key={section.id}
                     section={section}
@@ -244,18 +223,28 @@ const OutfitBuilder = () => {
                     onSortChange={(sort) => handleSortChange(section.id, sort)}
                     compact
                   />
-                ))}
-              </div>
-            )}
-          </div>
+                );
+              })}
+            </div>
+          ))}
 
-          {/* Preview Sidebar */}
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <OutfitPreview 
-              selectedItems={selectedItemObjects} 
-              additionalAccessoryCount={additionalAccessoryCount}
-            />
-          </div>
+          {/* Additional Accessories Row */}
+          {additionalAccessoryCount > 0 && (
+            <div className="grid grid-cols-3 gap-3">
+              {ADDITIONAL_ACCESSORY_SECTIONS.slice(0, additionalAccessoryCount).map((section) => (
+                <OutfitSectionCard
+                  key={section.id}
+                  section={section}
+                  items={getItemsForSection(section)}
+                  selectedItemId={selectedItems[section.id]}
+                  onSelect={(itemId) => handleSelectItem(section.id, itemId)}
+                  sortOption={sortOptions[section.id]}
+                  onSortChange={(sort) => handleSortChange(section.id, sort)}
+                  compact
+                />
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
