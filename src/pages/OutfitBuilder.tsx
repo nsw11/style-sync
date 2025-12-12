@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Save, Plus, User } from 'lucide-react';
+import { Save, Plus, User, Camera, X } from 'lucide-react';
 import { useClothingStore } from '@/hooks/useClothingStore';
 import { useOutfitStore } from '@/hooks/useOutfitStore';
 import { MannequinSlot } from '@/components/outfit/MannequinSlot';
@@ -7,6 +7,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -38,8 +39,8 @@ const MANNEQUIN_SECTIONS: { section: OutfitSectionConfig; position: string }[] =
 ];
 
 const OutfitBuilder = () => {
-  const { items, isLoaded: clothingLoaded } = useClothingStore();
-  const { addOutfit } = useOutfitStore();
+  const { items, isLoaded: clothingLoaded, logWear } = useClothingStore();
+  const { addOutfit, logOutfitWear } = useOutfitStore();
   const { toast } = useToast();
 
   const [selectedItems, setSelectedItems] = useState<{ [key in OutfitSection]?: string }>({});
@@ -61,6 +62,8 @@ const OutfitBuilder = () => {
   const [additionalAccessoryCount, setAdditionalAccessoryCount] = useState(0);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [outfitName, setOutfitName] = useState('');
+  const [logWearOnSave, setLogWearOnSave] = useState(true);
+  const [fitPic, setFitPic] = useState<string>('');
 
   const getItemsForSection = (section: OutfitSectionConfig): ClothingItem[] => {
     return items.filter(item => {
@@ -121,20 +124,44 @@ const OutfitBuilder = () => {
       return;
     }
 
-    addOutfit({
+    const newOutfit = addOutfit({
       name: outfitName.trim(),
       items: selectedItems,
     });
 
-    toast({ 
-      title: 'Outfit saved!', 
-      description: `"${outfitName}" has been added to your collection` 
-    });
+    // If "I wore this outfit" is checked, log wear for outfit and all items
+    if (logWearOnSave && newOutfit) {
+      const itemIds = logOutfitWear(newOutfit.id, fitPic || undefined);
+      itemIds.forEach(id => logWear(id, newOutfit.id));
+      
+      toast({ 
+        title: 'Outfit saved & worn!', 
+        description: `"${outfitName}" saved with wear logged for ${itemIds.length} items` 
+      });
+    } else {
+      toast({ 
+        title: 'Outfit saved!', 
+        description: `"${outfitName}" has been added to your collection` 
+      });
+    }
 
     setShowSaveDialog(false);
     setOutfitName('');
     setSelectedItems({});
     setAdditionalAccessoryCount(0);
+    setLogWearOnSave(true);
+    setFitPic('');
+  };
+
+  const handleFitPicUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFitPic(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const hasAnySelection = Object.values(selectedItems).some(id => id);
@@ -324,7 +351,7 @@ const OutfitBuilder = () => {
       </div>
 
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent className="max-w-sm bg-popover">
+        <DialogContent className="max-w-md bg-popover">
           <DialogHeader>
             <DialogTitle>Save Outfit</DialogTitle>
           </DialogHeader>
@@ -342,9 +369,62 @@ const OutfitBuilder = () => {
               />
             </div>
 
+            {/* I wore this outfit checkbox */}
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+              <Checkbox 
+                id="log-wear" 
+                checked={logWearOnSave}
+                onCheckedChange={(checked) => setLogWearOnSave(checked as boolean)}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <Label htmlFor="log-wear" className="cursor-pointer font-medium text-foreground">
+                  I wore this outfit
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Log a wear for each clothing item in this outfit
+                </p>
+              </div>
+            </div>
+
+            {/* Fit pic upload (only show if logging wear) */}
+            {logWearOnSave && (
+              <div>
+                <Label className="mb-2 block">Fitpic (optional)</Label>
+                <div className="flex gap-3">
+                  {fitPic ? (
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden">
+                      <img src={fitPic} alt="Outfit photo" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setFitPic('')}
+                        className="absolute top-1 right-1 p-1 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
+                      <Camera className="w-6 h-6 text-muted-foreground mb-1" />
+                      <span className="text-xs text-muted-foreground">Add photo</span>
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFitPicUpload}
+                      />
+                    </label>
+                  )}
+                  <p className="text-xs text-muted-foreground flex-1">
+                    Add a photo of yourself wearing this outfit
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="text-sm text-muted-foreground">
               <p>This outfit includes:</p>
-              <ul className="mt-1 space-y-1 max-h-40 overflow-y-auto">
+              <ul className="mt-1 space-y-1 max-h-32 overflow-y-auto">
                 {allSections.map(section => {
                   const item = selectedItemObjects[section.id];
                   return (
@@ -373,7 +453,7 @@ const OutfitBuilder = () => {
                 className="flex-1"
                 onClick={handleSave}
               >
-                Save Outfit
+                {logWearOnSave ? 'Save & Log Wear' : 'Save Outfit'}
               </Button>
             </div>
           </div>
