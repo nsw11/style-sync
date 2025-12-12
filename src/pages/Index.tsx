@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Shirt, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Shirt, Plus, Layers } from 'lucide-react';
 import { useClothingStore } from '@/hooks/useClothingStore';
 import { AddClothingDialog } from '@/components/clothing/AddClothingDialog';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
@@ -135,10 +136,19 @@ const Index = () => {
               </div>
             </div>
 
-            <Button onClick={() => setShowAddDialog(true)} className="gap-2">
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Add Item</span>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link to="/outfit-builder">
+                <Button variant="outline" className="gap-2">
+                  <Layers className="w-4 h-4" />
+                  <span className="hidden sm:inline">Outfit Builder</span>
+                </Button>
+              </Link>
+
+              <Button onClick={() => setShowAddDialog(true)} className="gap-2">
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Add Item</span>
+              </Button>
+            </div>
 
             <AddClothingDialog
               onAdd={addItem}
