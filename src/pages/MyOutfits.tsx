@@ -76,7 +76,13 @@ const MyOutfits = () => {
   const handleLogWear = () => {
     if (!selectedOutfit) return;
 
-    const itemIds = logOutfitWear(selectedOutfit.id, fitPic || undefined);
+    // Get item IDs directly from selectedOutfit.items
+    const itemIds = Object.values(selectedOutfit.items).filter(Boolean) as string[];
+    
+    // Log outfit wear
+    logOutfitWear(selectedOutfit.id, fitPic || undefined);
+    
+    // Log wear for each item
     itemIds.forEach(id => logWear(id, selectedOutfit.id));
 
     toast({
@@ -84,11 +90,12 @@ const MyOutfits = () => {
       description: `Logged wear for "${selectedOutfit.name}" and ${itemIds.length} items.`
     });
 
-    // Update the selected outfit to reflect new wear
-    const updatedOutfit = outfits.find(o => o.id === selectedOutfit.id);
-    if (updatedOutfit) {
-      setSelectedOutfit({ ...updatedOutfit, wearCount: (updatedOutfit.wearCount || 0) + 1 });
-    }
+    // Update the selected outfit to reflect new wear count immediately in UI
+    setSelectedOutfit(prev => prev ? {
+      ...prev,
+      wearCount: (prev.wearCount || 0) + 1,
+      wearLogs: [...(prev.wearLogs || []), { id: crypto.randomUUID(), date: new Date(), photo: fitPic || undefined }]
+    } : null);
 
     setShowLogWearDialog(false);
     setFitPic('');
