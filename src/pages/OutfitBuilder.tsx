@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Save, Plus, User, Camera, X } from 'lucide-react';
+import { Save, Plus, User } from 'lucide-react';
+import { FitPicUpload } from '@/components/clothing/FitPicUpload';
 import { useClothingStore } from '@/hooks/useClothingStore';
 import { useOutfitStore } from '@/hooks/useOutfitStore';
 import { MannequinSlot } from '@/components/outfit/MannequinSlot';
@@ -159,16 +160,6 @@ const OutfitBuilder = () => {
     setFitPic('');
   };
 
-  const handleFitPicUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFitPic(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const hasAnySelection = Object.values(selectedItems).some(id => id);
 
@@ -396,35 +387,8 @@ const OutfitBuilder = () => {
             {/* Fit pic upload (only show if logging wear) */}
             {logWearOnSave && (
               <div>
-                <Label className="mb-2 block">Fitpic (optional)</Label>
-                <div className="flex gap-3">
-                  {fitPic ? (
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden">
-                      <img src={fitPic} alt="Outfit photo" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setFitPic('')}
-                        className="absolute top-1 right-1 p-1 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
-                      <Camera className="w-6 h-6 text-muted-foreground mb-1" />
-                      <span className="text-xs text-muted-foreground">Add photo</span>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFitPicUpload}
-                      />
-                    </label>
-                  )}
-                  <p className="text-xs text-muted-foreground flex-1">
-                    Add a photo of yourself wearing this outfit
-                  </p>
-                </div>
+                <Label className="mb-2 block">Show off the fit! (optional)</Label>
+                <FitPicUpload value={fitPic} onChange={setFitPic} />
               </div>
             )}
 

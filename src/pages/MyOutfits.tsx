@@ -3,12 +3,12 @@ import {
   Archive, 
   Trash2, 
   Calendar, 
-  Camera, 
-  X, 
   ChevronLeft,
   Image as ImageIcon,
-  DollarSign
+  DollarSign,
+  Camera
 } from 'lucide-react';
+import { FitPicUpload } from '@/components/clothing/FitPicUpload';
 import { useOutfitStore } from '@/hooks/useOutfitStore';
 import { useClothingStore } from '@/hooks/useClothingStore';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -101,16 +101,6 @@ const MyOutfits = () => {
     setFitPic('');
   };
 
-  const handleFitPicUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFitPic(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   // Detail view for selected outfit
   if (selectedOutfit) {
@@ -216,7 +206,7 @@ const MyOutfits = () => {
           {/* Sidebar - Fitpics / Wear History */}
           <div className="space-y-4">
             <div className="glass-card rounded-xl p-4">
-              <h3 className="font-medium text-foreground mb-3">Fitpics</h3>
+              <h3 className="font-medium text-foreground mb-3">Show off the fit!</h3>
               {selectedOutfit.wearLogs && selectedOutfit.wearLogs.some(log => log.photo) ? (
                 <div className="grid grid-cols-2 gap-2">
                   {selectedOutfit.wearLogs.filter(log => log.photo).map(log => (
@@ -237,7 +227,7 @@ const MyOutfits = () => {
               ) : (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <ImageIcon className="w-8 h-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No fitpics yet</p>
+                  <p className="text-sm text-muted-foreground">No photos yet</p>
                   <p className="text-xs text-muted-foreground mt-1">Log a wear to add photos</p>
                 </div>
               )}
@@ -280,31 +270,8 @@ const MyOutfits = () => {
               </p>
 
               <div>
-                <Label className="mb-2 block">Fitpic (optional)</Label>
-                <div className="flex gap-3">
-                  {fitPic ? (
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden">
-                      <img src={fitPic} alt="Outfit photo" className="w-full h-full object-cover" />
-                      <button
-                        onClick={() => setFitPic('')}
-                        className="absolute top-1 right-1 p-1 rounded-full bg-background/90 hover:bg-destructive hover:text-destructive-foreground"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="w-24 h-24 rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors">
-                      <Camera className="w-6 h-6 text-muted-foreground mb-1" />
-                      <span className="text-xs text-muted-foreground">Add photo</span>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFitPicUpload}
-                      />
-                    </label>
-                  )}
-                </div>
+                <Label className="mb-2 block">Show off the fit! (optional)</Label>
+                <FitPicUpload value={fitPic} onChange={setFitPic} />
               </div>
 
               <p className="text-xs text-muted-foreground">
