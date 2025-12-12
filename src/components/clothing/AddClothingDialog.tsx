@@ -30,6 +30,7 @@ interface AddClothingDialogProps {
   onUpdate?: (id: string, updates: Partial<ClothingItem>) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  triggerButton?: boolean;
 }
 
 export function AddClothingDialog({
@@ -40,6 +41,7 @@ export function AddClothingDialog({
   onUpdate,
   open,
   onOpenChange,
+  triggerButton = true,
 }: AddClothingDialogProps) {
   const { toast } = useToast();
   const [internalOpen, setInternalOpen] = useState(false);
@@ -150,7 +152,7 @@ export function AddClothingDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) resetForm(); }}>
-      {!isControlled && (
+      {triggerButton && !isControlled && (
         <DialogTrigger asChild>
           <Button className="gap-2">
             <Plus className="w-4 h-4" />

@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Category, CATEGORIES, SortOption, ViewMode, FilterState } from '@/types/clothing';
+import { Category, CATEGORIES, SortOption, ViewMode, FilterState, ClothingItem } from '@/types/clothing';
 import { cn } from '@/lib/utils';
 
 interface FilterBarProps {
@@ -27,7 +27,7 @@ interface FilterBarProps {
   onViewModeChange: (mode: ViewMode) => void;
   filters: FilterState;
   onFiltersChange: (filters: FilterState) => void;
-  availableSubcategories: string[];
+  items: ClothingItem[];
 }
 
 const sortOptions: { value: SortOption; label: string }[] = [
@@ -50,15 +50,32 @@ export function FilterBar({
   onViewModeChange,
   filters,
   onFiltersChange,
-  availableSubcategories,
+  items,
 }: FilterBarProps) {
   const activeFilterCount = filters.categories.length + filters.subcategories.length + (filters.hasCost !== 'all' ? 1 : 0);
+
+  // Get subcategories only from selected categories (or all if none selected)
+  const availableSubcategories = (() => {
+    const relevantItems = filters.categories.length > 0
+      ? items.filter(item => filters.categories.includes(item.category))
+      : items;
+    const subcats = new Set(relevantItems.map(item => item.subcategory));
+    return Array.from(subcats).sort();
+  })();
 
   const toggleCategory = (category: Category) => {
     const newCategories = filters.categories.includes(category)
       ? filters.categories.filter(c => c !== category)
       : [...filters.categories, category];
-    onFiltersChange({ ...filters, categories: newCategories });
+    
+    // Clear subcategories that no longer belong to selected categories
+    const relevantItems = newCategories.length > 0
+      ? items.filter(item => newCategories.includes(item.category))
+      : items;
+    const validSubcats = new Set(relevantItems.map(item => item.subcategory));
+    const newSubcategories = filters.subcategories.filter(s => validSubcats.has(s));
+    
+    onFiltersChange({ ...filters, categories: newCategories, subcategories: newSubcategories });
   };
 
   const toggleSubcategory = (subcategory: string) => {
