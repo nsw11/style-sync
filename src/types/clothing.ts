@@ -64,3 +64,36 @@ export interface FilterState {
   subcategories: string[];
   hasCost: 'all' | 'with' | 'without';
 }
+
+// Outfit Builder Types
+export type OutfitSection = 
+  | 'hat'
+  | 'top'
+  | 'outerwear'
+  | 'belt'
+  | 'bottom'
+  | 'shoes'
+  | 'accessories';
+
+export const OUTFIT_SECTIONS: { id: OutfitSection; label: string; mergedCategories: Category[] }[] = [
+  { id: 'hat', label: 'Hat', mergedCategories: ['Hat'] },
+  { id: 'top', label: 'Top / Base Layer', mergedCategories: ['Top', 'Base Layer'] },
+  { id: 'outerwear', label: 'Outerwear', mergedCategories: ['Outerwear'] },
+  { id: 'belt', label: 'Belt', mergedCategories: ['Belt'] },
+  { id: 'bottom', label: 'Bottom', mergedCategories: ['Bottom'] },
+  { id: 'shoes', label: 'Shoes / Socks', mergedCategories: ['Shoes', 'Socks'] },
+  { id: 'accessories', label: 'Accessories', mergedCategories: ['Accessories'] },
+];
+
+export interface Outfit {
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+  items: {
+    [key in OutfitSection]?: string; // clothing item ID
+  };
+  accessoriesEnabled: boolean;
+}
+
+export type OutfitSortOption = 'recent' | 'mostWorn' | 'alphabetical' | 'category';
