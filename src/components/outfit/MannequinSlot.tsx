@@ -157,7 +157,13 @@ export function MannequinSlot({
           </button>
         </PopoverTrigger>
 
-        <PopoverContent className="w-80 p-0 bg-popover border-border shadow-xl z-50" align="center" sideOffset={8}>
+        <PopoverContent 
+          className="w-80 p-0 bg-popover border-border shadow-xl z-50" 
+          align="center" 
+          sideOffset={8}
+          collisionPadding={16}
+          avoidCollisions={true}
+        >
           {/* Header with search and sort */}
           <div className="p-3 border-b border-border space-y-2">
             <div className="flex items-center justify-between">
