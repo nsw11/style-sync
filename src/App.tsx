@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import OutfitBuilder from "./pages/OutfitBuilder";
 import MyOutfits from "./pages/MyOutfits";
 import Stats from "./pages/Stats";
+import OutfitWrapped from "./pages/OutfitWrapped";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/outfit-builder" element={<OutfitBuilder />} />
           <Route path="/my-outfits" element={<MyOutfits />} />
           <Route path="/stats" element={<Stats />} />
+          <Route path="/wrapped" element={<OutfitWrapped />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
