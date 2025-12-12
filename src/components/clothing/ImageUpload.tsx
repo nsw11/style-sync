@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ImageUploadProps {
@@ -11,6 +11,33 @@ interface ImageUploadProps {
 export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [rotation, setRotation] = useState(0);
+
+  const rotateImage = (imageSrc: string, degrees: number): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        
+        // Swap width/height for 90 or 270 degree rotations
+        if (degrees === 90 || degrees === 270) {
+          canvas.width = img.height;
+          canvas.height = img.width;
+        } else {
+          canvas.width = img.width;
+          canvas.height = img.height;
+        }
+        
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((degrees * Math.PI) / 180);
+        ctx.drawImage(img, -img.width / 2, -img.height / 2);
+        
+        resolve(canvas.toDataURL('image/jpeg', 0.9));
+      };
+      img.src = imageSrc;
+    });
+  };
 
   const handleFile = (file: File) => {
     if (!file.type.startsWith('image/')) return;
@@ -18,9 +45,18 @@ export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
+      setRotation(0);
       onChange(result);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleRotate = async () => {
+    if (!value) return;
+    const newRotation = (rotation + 90) % 360;
+    const rotatedImage = await rotateImage(value, 90);
+    setRotation(newRotation);
+    onChange(rotatedImage);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -33,6 +69,11 @@ export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
+  };
+
+  const handleClear = () => {
+    setRotation(0);
+    onChange('');
   };
 
   return (
@@ -55,6 +96,14 @@ export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
           <div className="absolute inset-0 bg-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <button
               type="button"
+              onClick={handleRotate}
+              className="p-2 bg-background rounded-full hover:bg-background/90 transition-colors"
+              title="Rotate 90°"
+            >
+              <RotateCw className="w-4 h-4 text-foreground" />
+            </button>
+            <button
+              type="button"
               onClick={() => inputRef.current?.click()}
               className="p-2 bg-background rounded-full hover:bg-background/90 transition-colors"
             >
@@ -62,7 +111,7 @@ export function ImageUpload({ value, onChange, className }: ImageUploadProps) {
             </button>
             <button
               type="button"
-              onClick={() => onChange('')}
+              onClick={handleClear}
               className="p-2 bg-destructive rounded-full hover:bg-destructive/90 transition-colors"
             >
               <X className="w-4 h-4 text-destructive-foreground" />
