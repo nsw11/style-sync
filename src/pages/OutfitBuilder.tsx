@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Save, Plus } from 'lucide-react';
+import { Save, Plus, User } from 'lucide-react';
 import { useClothingStore } from '@/hooks/useClothingStore';
 import { useOutfitStore } from '@/hooks/useOutfitStore';
-import { OutfitSectionCard } from '@/components/outfit/OutfitSectionCard';
+import { MannequinSlot } from '@/components/outfit/MannequinSlot';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,20 @@ import {
   OutfitSortOption,
   OutfitSectionConfig,
 } from '@/types/clothing';
+
+// Define mannequin layout positions
+const MANNEQUIN_SECTIONS: { section: OutfitSectionConfig; position: string }[] = [
+  { section: { id: 'hat', label: 'Hat', category: 'Hat' }, position: 'top-0 left-1/2 -translate-x-1/2' },
+  { section: { id: 'accessory', label: 'Accessory', category: 'Accessories' }, position: 'top-4 right-0' },
+  { section: { id: 'baseTop', label: 'Base Top', category: 'Top', filterSubcategory: 'Base Layer' }, position: 'top-28 left-0' },
+  { section: { id: 'top', label: 'Top', category: 'Top' }, position: 'top-28 left-1/2 -translate-x-1/2' },
+  { section: { id: 'outerwear', label: 'Outerwear', category: 'Outerwear' }, position: 'top-28 right-0' },
+  { section: { id: 'belt', label: 'Belt', category: 'Belt' }, position: 'top-56 right-0' },
+  { section: { id: 'baseBottom', label: 'Base Bottom', category: 'Bottom', filterSubcategory: 'Base Layer' }, position: 'top-56 left-0' },
+  { section: { id: 'bottom', label: 'Bottom', category: 'Bottom' }, position: 'top-56 left-1/2 -translate-x-1/2' },
+  { section: { id: 'socks', label: 'Socks', category: 'Socks' }, position: 'top-[336px] left-0' },
+  { section: { id: 'shoes', label: 'Shoes', category: 'Shoes' }, position: 'top-[336px] left-1/2 -translate-x-1/2' },
+];
 
 const OutfitBuilder = () => {
   const { items, isLoaded: clothingLoaded } = useClothingStore();
@@ -126,7 +140,7 @@ const OutfitBuilder = () => {
   const hasAnySelection = Object.values(selectedItems).some(id => id);
 
   const allSections: OutfitSectionConfig[] = [
-    ...OUTFIT_GRID.flat().filter(Boolean) as OutfitSectionConfig[],
+    ...MANNEQUIN_SECTIONS.map(m => m.section),
     ...ADDITIONAL_ACCESSORY_SECTIONS.slice(0, additionalAccessoryCount),
   ];
 
@@ -143,7 +157,7 @@ const OutfitBuilder = () => {
   return (
     <AppLayout
       title="Outfit Builder"
-      subtitle="Create a new outfit combination"
+      subtitle="Click on a slot to add clothing"
       actions={
         <Button 
           onClick={() => setShowSaveDialog(true)}
@@ -155,67 +169,158 @@ const OutfitBuilder = () => {
         </Button>
       }
     >
-      <div className="max-w-4xl mx-auto space-y-3">
-        {OUTFIT_GRID.map((row, rowIndex) => (
-          <div key={rowIndex} className="grid grid-cols-3 gap-3">
-            {row.map((section, colIndex) => {
-              if (!section) {
-                if (rowIndex === 3 && colIndex === 2) {
-                  return (
-                    <div key="add-accessory" className="glass-card rounded-xl p-3 flex flex-col items-center justify-center">
-                      <p className="text-xs text-muted-foreground mb-2 text-center">Add Accessories</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddAccessory}
-                        disabled={additionalAccessoryCount >= 3}
-                        className="gap-1"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add ({additionalAccessoryCount}/3)
-                      </Button>
-                    </div>
-                  );
-                }
-                return (
-                  <div key={`empty-${rowIndex}-${colIndex}`} className="glass-card rounded-xl p-3 opacity-30 flex items-center justify-center">
-                    <span className="text-xs text-muted-foreground">—</span>
-                  </div>
-                );
-              }
+      <div className="max-w-3xl mx-auto">
+        {/* Mannequin layout */}
+        <div className="relative bg-gradient-to-b from-muted/30 to-muted/60 rounded-3xl p-8 min-h-[520px]">
+          {/* Center silhouette */}
+          <div className="absolute left-1/2 top-8 -translate-x-1/2 w-32 h-[420px] flex flex-col items-center opacity-10 pointer-events-none">
+            <User className="w-full h-full text-foreground" strokeWidth={0.5} />
+          </div>
 
-              return (
-                <OutfitSectionCard
+          {/* Clothing slots grid */}
+          <div className="grid grid-cols-3 gap-y-6 gap-x-4 relative z-10">
+            {/* Row 1: Hat (center), Accessory (right) */}
+            <div /> {/* empty left */}
+            <div className="flex justify-center">
+              <MannequinSlot
+                section={{ id: 'hat', label: 'Hat', category: 'Hat' }}
+                items={getItemsForSection({ id: 'hat', label: 'Hat', category: 'Hat' })}
+                selectedItemId={selectedItems.hat}
+                onSelect={(id) => handleSelectItem('hat', id)}
+                sortOption={sortOptions.hat}
+                onSortChange={(sort) => handleSortChange('hat', sort)}
+              />
+            </div>
+            <div className="flex justify-center">
+              <MannequinSlot
+                section={{ id: 'accessory', label: 'Accessory', category: 'Accessories' }}
+                items={getItemsForSection({ id: 'accessory', label: 'Accessory', category: 'Accessories' })}
+                selectedItemId={selectedItems.accessory}
+                onSelect={(id) => handleSelectItem('accessory', id)}
+                sortOption={sortOptions.accessory}
+                onSortChange={(sort) => handleSortChange('accessory', sort)}
+              />
+            </div>
+
+            {/* Row 2: Base Top, Top, Outerwear */}
+            <div className="flex justify-center">
+              <MannequinSlot
+                section={{ id: 'baseTop', label: 'Base Top', category: 'Top', filterSubcategory: 'Base Layer' }}
+                items={getItemsForSection({ id: 'baseTop', label: 'Base Top', category: 'Top', filterSubcategory: 'Base Layer' })}
+                selectedItemId={selectedItems.baseTop}
+                onSelect={(id) => handleSelectItem('baseTop', id)}
+                sortOption={sortOptions.baseTop}
+                onSortChange={(sort) => handleSortChange('baseTop', sort)}
+              />
+            </div>
+            <div className="flex justify-center">
+              <MannequinSlot
+                section={{ id: 'top', label: 'Top', category: 'Top' }}
+                items={getItemsForSection({ id: 'top', label: 'Top', category: 'Top' })}
+                selectedItemId={selectedItems.top}
+                onSelect={(id) => handleSelectItem('top', id)}
+                sortOption={sortOptions.top}
+                onSortChange={(sort) => handleSortChange('top', sort)}
+              />
+            </div>
+            <div className="flex justify-center">
+              <MannequinSlot
+                section={{ id: 'outerwear', label: 'Outerwear', category: 'Outerwear' }}
+                items={getItemsForSection({ id: 'outerwear', label: 'Outerwear', category: 'Outerwear' })}
+                selectedItemId={selectedItems.outerwear}
+                onSelect={(id) => handleSelectItem('outerwear', id)}
+                sortOption={sortOptions.outerwear}
+                onSortChange={(sort) => handleSortChange('outerwear', sort)}
+              />
+            </div>
+
+            {/* Row 3: Base Bottom, Bottom, Belt */}
+            <div className="flex justify-center">
+              <MannequinSlot
+                section={{ id: 'baseBottom', label: 'Base Bottom', category: 'Bottom', filterSubcategory: 'Base Layer' }}
+                items={getItemsForSection({ id: 'baseBottom', label: 'Base Bottom', category: 'Bottom', filterSubcategory: 'Base Layer' })}
+                selectedItemId={selectedItems.baseBottom}
+                onSelect={(id) => handleSelectItem('baseBottom', id)}
+                sortOption={sortOptions.baseBottom}
+                onSortChange={(sort) => handleSortChange('baseBottom', sort)}
+              />
+            </div>
+            <div className="flex justify-center">
+              <MannequinSlot
+                section={{ id: 'bottom', label: 'Bottom', category: 'Bottom' }}
+                items={getItemsForSection({ id: 'bottom', label: 'Bottom', category: 'Bottom' })}
+                selectedItemId={selectedItems.bottom}
+                onSelect={(id) => handleSelectItem('bottom', id)}
+                sortOption={sortOptions.bottom}
+                onSortChange={(sort) => handleSortChange('bottom', sort)}
+              />
+            </div>
+            <div className="flex justify-center">
+              <MannequinSlot
+                section={{ id: 'belt', label: 'Belt', category: 'Belt' }}
+                items={getItemsForSection({ id: 'belt', label: 'Belt', category: 'Belt' })}
+                selectedItemId={selectedItems.belt}
+                onSelect={(id) => handleSelectItem('belt', id)}
+                sortOption={sortOptions.belt}
+                onSortChange={(sort) => handleSortChange('belt', sort)}
+              />
+            </div>
+
+            {/* Row 4: Socks, Shoes, Add Accessories */}
+            <div className="flex justify-center">
+              <MannequinSlot
+                section={{ id: 'socks', label: 'Socks', category: 'Socks' }}
+                items={getItemsForSection({ id: 'socks', label: 'Socks', category: 'Socks' })}
+                selectedItemId={selectedItems.socks}
+                onSelect={(id) => handleSelectItem('socks', id)}
+                sortOption={sortOptions.socks}
+                onSortChange={(sort) => handleSortChange('socks', sort)}
+              />
+            </div>
+            <div className="flex justify-center">
+              <MannequinSlot
+                section={{ id: 'shoes', label: 'Shoes', category: 'Shoes' }}
+                items={getItemsForSection({ id: 'shoes', label: 'Shoes', category: 'Shoes' })}
+                selectedItemId={selectedItems.shoes}
+                onSelect={(id) => handleSelectItem('shoes', id)}
+                sortOption={sortOptions.shoes}
+                onSortChange={(sort) => handleSortChange('shoes', sort)}
+              />
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                More
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddAccessory}
+                disabled={additionalAccessoryCount >= 3}
+                className="w-20 h-20 rounded-xl border-2 border-dashed flex flex-col gap-1"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="text-[10px]">{additionalAccessoryCount}/3</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Additional Accessories */}
+          {additionalAccessoryCount > 0 && (
+            <div className="flex justify-center gap-4 mt-6 pt-6 border-t border-border/50">
+              {ADDITIONAL_ACCESSORY_SECTIONS.slice(0, additionalAccessoryCount).map((section) => (
+                <MannequinSlot
                   key={section.id}
                   section={section}
                   items={getItemsForSection(section)}
                   selectedItemId={selectedItems[section.id]}
-                  onSelect={(itemId) => handleSelectItem(section.id, itemId)}
+                  onSelect={(id) => handleSelectItem(section.id, id)}
                   sortOption={sortOptions[section.id]}
                   onSortChange={(sort) => handleSortChange(section.id, sort)}
-                  compact
                 />
-              );
-            })}
-          </div>
-        ))}
-
-        {additionalAccessoryCount > 0 && (
-          <div className="grid grid-cols-3 gap-3">
-            {ADDITIONAL_ACCESSORY_SECTIONS.slice(0, additionalAccessoryCount).map((section) => (
-              <OutfitSectionCard
-                key={section.id}
-                section={section}
-                items={getItemsForSection(section)}
-                selectedItemId={selectedItems[section.id]}
-                onSelect={(itemId) => handleSelectItem(section.id, itemId)}
-                sortOption={sortOptions[section.id]}
-                onSortChange={(sort) => handleSortChange(section.id, sort)}
-                compact
-              />
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
