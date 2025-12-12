@@ -1,12 +1,16 @@
 import { ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Shirt, Layers, Archive } from 'lucide-react';
+import { Shirt, Layers, Archive, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const tabs = [
+const leftTabs = [
   { path: '/', label: 'My Closet', icon: Shirt },
   { path: '/outfit-builder', label: 'Outfit Builder', icon: Layers },
   { path: '/my-outfits', label: 'My Outfits', icon: Archive },
+];
+
+const rightTabs = [
+  { path: '/stats', label: 'Stats', icon: BarChart3 },
 ];
 
 interface AppLayoutProps {
@@ -18,6 +22,25 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, title, subtitle, actions }: AppLayoutProps) {
   const location = useLocation();
+
+  const renderTab = (tab: typeof leftTabs[0]) => {
+    const isActive = location.pathname === tab.path;
+    return (
+      <NavLink
+        key={tab.path}
+        to={tab.path}
+        className={cn(
+          'flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors border-b-2',
+          isActive
+            ? 'border-primary text-primary bg-background'
+            : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
+        )}
+      >
+        <tab.icon className="w-4 h-4" />
+        <span className="hidden sm:inline">{tab.label}</span>
+      </NavLink>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -39,26 +62,14 @@ export function AppLayout({ children, title, subtitle, actions }: AppLayoutProps
             {actions && <div className="flex items-center gap-2">{actions}</div>}
           </div>
 
-          {/* Tab navigation */}
-          <nav className="flex gap-1 -mb-px">
-            {tabs.map((tab) => {
-              const isActive = location.pathname === tab.path;
-              return (
-                <NavLink
-                  key={tab.path}
-                  to={tab.path}
-                  className={cn(
-                    'flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors border-b-2',
-                    isActive
-                      ? 'border-primary text-primary bg-background'
-                      : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                  )}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </NavLink>
-              );
-            })}
+          {/* Tab navigation - split left and right */}
+          <nav className="flex justify-between -mb-px">
+            <div className="flex gap-1">
+              {leftTabs.map(renderTab)}
+            </div>
+            <div className="flex gap-1">
+              {rightTabs.map(renderTab)}
+            </div>
           </nav>
         </div>
       </header>

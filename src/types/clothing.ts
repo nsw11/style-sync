@@ -30,6 +30,13 @@ export const DEFAULT_SUBCATEGORIES: Record<Category, string[]> = {
   'Accessories': ['Watch', 'Necklace', 'Ring', 'Bracelet', 'Scarf', 'Bag', 'Sunglasses'],
 };
 
+// Wear log for tracking individual item wears
+export interface WearLog {
+  id: string;
+  date: Date;
+  outfitId?: string; // Optional link to outfit if worn as part of outfit
+}
+
 export interface ClothingItem {
   id: string;
   image: string;
@@ -40,6 +47,7 @@ export interface ClothingItem {
   cost?: number;
   description?: string;
   wearCount: number;
+  wearLogs: WearLog[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -82,14 +90,9 @@ export interface OutfitSectionConfig {
   id: OutfitSection;
   label: string;
   category: Category;
-  filterSubcategory?: string; // Filter for specific subcategory prefix
+  filterSubcategory?: string;
 }
 
-// Grid layout: 4 rows x 3 columns
-// Row 1: [empty], Hat, Accessory
-// Row 2: Base Top, Top, Outerwear  
-// Row 3: Base Bottom, Bottom, Belt
-// Row 4: Socks, Shoes, [additional accessories]
 export const OUTFIT_GRID: (OutfitSectionConfig | null)[][] = [
   [
     null,
@@ -109,7 +112,7 @@ export const OUTFIT_GRID: (OutfitSectionConfig | null)[][] = [
   [
     { id: 'socks', label: 'Socks', category: 'Socks' },
     { id: 'shoes', label: 'Shoes', category: 'Shoes' },
-    null, // Placeholder for additional accessories button
+    null,
   ],
 ];
 
@@ -119,14 +122,26 @@ export const ADDITIONAL_ACCESSORY_SECTIONS: OutfitSectionConfig[] = [
   { id: 'additionalAccessory3', label: 'Accessory 4', category: 'Accessories' },
 ];
 
+// Outfit wear log with optional photo
+export interface OutfitWearLog {
+  id: string;
+  date: Date;
+  photo?: string; // Base64 or URL
+}
+
 export interface Outfit {
   id: string;
   name: string;
   createdAt: Date;
   updatedAt: Date;
   items: {
-    [key in OutfitSection]?: string; // clothing item ID
+    [key in OutfitSection]?: string;
   };
+  wearCount: number;
+  wearLogs: OutfitWearLog[];
 }
 
 export type OutfitSortOption = 'recent' | 'mostWorn' | 'alphabetical' | 'category';
+
+// Stats types
+export type StatsSortOption = 'mostWorn' | 'leastWorn' | 'bestValue' | 'worstValue' | 'recent';

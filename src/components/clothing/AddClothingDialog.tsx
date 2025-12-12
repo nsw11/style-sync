@@ -23,7 +23,7 @@ import { Category, CATEGORIES, ClothingItem } from '@/types/clothing';
 import { useToast } from '@/hooks/use-toast';
 
 interface AddClothingDialogProps {
-  onAdd: (item: Omit<ClothingItem, 'id' | 'wearCount' | 'createdAt' | 'updatedAt'>) => void;
+  onAdd: (item: Omit<ClothingItem, 'id' | 'wearCount' | 'wearLogs' | 'createdAt' | 'updatedAt'>) => void;
   getSubcategoriesForCategory: (category: Category) => string[];
   addCustomSubcategory: (category: Category, subcategory: string) => void;
   editItem?: ClothingItem | null;

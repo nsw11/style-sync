@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ClothingItem, Category, DEFAULT_SUBCATEGORIES } from '@/types/clothing';
+import { ClothingItem, Category, DEFAULT_SUBCATEGORIES, WearLog } from '@/types/clothing';
 
 const STORAGE_KEY = 'clothing-tracker-items';
 const CUSTOM_SUBCATEGORIES_KEY = 'clothing-tracker-custom-subcategories';
@@ -19,7 +19,6 @@ export function useClothingStore() {
       'Bottom': [],
       'Shoes': [],
       'Socks': [],
-      'Base Layer': [],
       'Accessories': [],
     };
   });
@@ -32,6 +31,10 @@ export function useClothingStore() {
       const parsed = JSON.parse(stored);
       setItems(parsed.map((item: ClothingItem) => ({
         ...item,
+        wearLogs: (item.wearLogs || []).map((log: WearLog) => ({
+          ...log,
+          date: new Date(log.date),
+        })),
         createdAt: new Date(item.createdAt),
         updatedAt: new Date(item.updatedAt),
       })));
@@ -64,11 +67,12 @@ export function useClothingStore() {
     }));
   }, []);
 
-  const addItem = useCallback((item: Omit<ClothingItem, 'id' | 'wearCount' | 'createdAt' | 'updatedAt'>) => {
+  const addItem = useCallback((item: Omit<ClothingItem, 'id' | 'wearCount' | 'wearLogs' | 'createdAt' | 'updatedAt'>) => {
     const newItem: ClothingItem = {
       ...item,
       id: crypto.randomUUID(),
       wearCount: 0,
+      wearLogs: [],
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -88,13 +92,28 @@ export function useClothingStore() {
     setItems(prev => prev.filter(item => item.id !== id));
   }, []);
 
-  const incrementWearCount = useCallback((id: string) => {
+  const logWear = useCallback((id: string, outfitId?: string) => {
+    const wearLog: WearLog = {
+      id: crypto.randomUUID(),
+      date: new Date(),
+      outfitId,
+    };
     setItems(prev => prev.map(item =>
       item.id === id
-        ? { ...item, wearCount: item.wearCount + 1, updatedAt: new Date() }
+        ? { 
+            ...item, 
+            wearCount: item.wearCount + 1, 
+            wearLogs: [...(item.wearLogs || []), wearLog],
+            updatedAt: new Date() 
+          }
         : item
     ));
   }, []);
+
+  // Legacy incrementWearCount that uses logWear
+  const incrementWearCount = useCallback((id: string) => {
+    logWear(id);
+  }, [logWear]);
 
   return {
     items,
@@ -103,6 +122,7 @@ export function useClothingStore() {
     updateItem,
     deleteItem,
     incrementWearCount,
+    logWear,
     getSubcategoriesForCategory,
     addCustomSubcategory,
     customSubcategories,
