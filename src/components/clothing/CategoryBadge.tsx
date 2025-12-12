@@ -9,7 +9,6 @@ const categoryColors: Record<Category, string> = {
   'Bottom': 'bg-category-bottom/20 text-category-bottom border-category-bottom/30',
   'Shoes': 'bg-category-shoes/20 text-category-shoes border-category-shoes/30',
   'Socks': 'bg-category-socks/20 text-category-socks border-category-socks/30',
-  'Base Layer': 'bg-category-baselayer/20 text-category-baselayer border-category-baselayer/30',
   'Accessories': 'bg-category-accessories/20 text-category-accessories border-category-accessories/30',
 };
 
