@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Shirt, Plus, Layers } from 'lucide-react';
+import { Shirt, Plus, Layers, Database } from 'lucide-react';
 import { useClothingStore } from '@/hooks/useClothingStore';
 import { AddClothingDialog } from '@/components/clothing/AddClothingDialog';
 import { ClothingCard } from '@/components/clothing/ClothingCard';
@@ -9,6 +9,8 @@ import { EmptyState } from '@/components/clothing/EmptyState';
 import { Button } from '@/components/ui/button';
 import { ClothingItem, SortOption, ViewMode, FilterState } from '@/types/clothing';
 import { cn } from '@/lib/utils';
+import { DEMO_CLOTHING_ITEMS } from '@/lib/demoData';
+import { toast } from 'sonner';
 
 const Index = () => {
   const {
@@ -137,6 +139,18 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  DEMO_CLOTHING_ITEMS.forEach((item) => addItem(item));
+                  toast.success(`Added ${DEMO_CLOTHING_ITEMS.length} demo items to your closet`);
+                }}
+                className="gap-2"
+              >
+                <Database className="w-4 h-4" />
+                <span className="hidden sm:inline">Load Demo</span>
+              </Button>
+
               <Link to="/outfit-builder">
                 <Button variant="outline" className="gap-2">
                   <Layers className="w-4 h-4" />
