@@ -8,18 +8,54 @@ interface FitPicUploadProps {
   className?: string;
 }
 
+// Compress image to reduce storage usage
+const compressImage = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Max dimension 800px
+      const maxDim = 800;
+      let { width, height } = img;
+      
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = (height / width) * maxDim;
+          width = maxDim;
+        } else {
+          width = (width / height) * maxDim;
+          height = maxDim;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      // Convert to JPEG with 70% quality
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+};
+
 export function FitPicUpload({ value, onChange, className }: FitPicUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = useCallback((file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return;
     
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      onChange(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImage(file);
+      onChange(compressed);
+    } catch (error) {
+      console.error('Failed to compress image:', error);
+    }
   }, [onChange]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {

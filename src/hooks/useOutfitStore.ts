@@ -1,7 +1,25 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Outfit, OutfitWearLog, OutfitSection } from '@/types/clothing';
+import { toast } from '@/hooks/use-toast';
 
 const STORAGE_KEY = 'clothing-tracker-outfits';
+
+// Safe localStorage save that handles quota exceeded errors
+const safeLocalStorageSave = (key: string, data: string): boolean => {
+  try {
+    localStorage.setItem(key, data);
+    return true;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      toast({
+        title: 'Storage Full',
+        description: 'Local storage is full. Consider removing some items or photos to free up space.',
+        variant: 'destructive',
+      });
+    }
+    return false;
+  }
+};
 
 export function useOutfitStore() {
   const [outfits, setOutfits] = useState<Outfit[]>([]);
@@ -9,19 +27,23 @@ export function useOutfitStore() {
 
   // Load outfits from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      setOutfits(parsed.map((outfit: Outfit) => ({
-        ...outfit,
-        wearCount: outfit.wearCount || 0,
-        wearLogs: (outfit.wearLogs || []).map((log: OutfitWearLog) => ({
-          ...log,
-          date: new Date(log.date),
-        })),
-        createdAt: new Date(outfit.createdAt),
-        updatedAt: new Date(outfit.updatedAt),
-      })));
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setOutfits(parsed.map((outfit: Outfit) => ({
+          ...outfit,
+          wearCount: outfit.wearCount || 0,
+          wearLogs: (outfit.wearLogs || []).map((log: OutfitWearLog) => ({
+            ...log,
+            date: new Date(log.date),
+          })),
+          createdAt: new Date(outfit.createdAt),
+          updatedAt: new Date(outfit.updatedAt),
+        })));
+      }
+    } catch (error) {
+      console.error('Failed to load outfits:', error);
     }
     setIsLoaded(true);
   }, []);
@@ -29,7 +51,7 @@ export function useOutfitStore() {
   // Save outfits to localStorage
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(outfits));
+      safeLocalStorageSave(STORAGE_KEY, JSON.stringify(outfits));
     }
   }, [outfits, isLoaded]);
 
