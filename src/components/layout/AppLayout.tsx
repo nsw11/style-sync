@@ -4,7 +4,7 @@ import { Shirt, Layers, Archive, BarChart3, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const leftTabs = [
-  { path: '/', label: 'ThreadCount', icon: Shirt },
+  { path: '/', label: 'My Closet', icon: Shirt },
   { path: '/outfit-builder', label: 'Outfit Builder', icon: Layers },
   { path: '/my-outfits', label: 'My Outfits', icon: Archive },
 ];
