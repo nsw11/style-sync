@@ -49,6 +49,7 @@ export function AddClothingDialog({
   const isOpen = isControlled ? open : internalOpen;
   const setIsOpen = isControlled ? onOpenChange! : setInternalOpen;
 
+  const [title, setTitle] = useState('');
   const [image, setImage] = useState('');
   const [category, setCategory] = useState<Category | ''>('');
   const [subcategory, setSubcategory] = useState('');
@@ -63,6 +64,7 @@ export function AddClothingDialog({
 
   useEffect(() => {
     if (editItem) {
+      setTitle(editItem.title || '');
       setImage(editItem.image);
       setCategory(editItem.category);
       setSubcategory(editItem.subcategory);
@@ -74,6 +76,7 @@ export function AddClothingDialog({
   }, [editItem]);
 
   const resetForm = () => {
+    setTitle('');
     setImage('');
     setCategory('');
     setSubcategory('');
@@ -127,6 +130,7 @@ export function AddClothingDialog({
     }
 
     const itemData = {
+      title: title.trim() || undefined,
       image,
       category,
       subcategory: finalSubcategory,
@@ -166,6 +170,18 @@ export function AddClothingDialog({
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div>
+            <Label htmlFor="title" className="mb-2 block">Title</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., Vintage denim jacket (defaults to category)"
+              className="bg-background"
+              maxLength={100}
+            />
+          </div>
+
           <div>
             <Label className="mb-2 block">Image *</Label>
             <ImageUpload value={image} onChange={setImage} />
