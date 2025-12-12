@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, ImageOff } from 'lucide-react';
-import { ClothingItem, OutfitSection, OUTFIT_SECTIONS, OutfitSortOption } from '@/types/clothing';
+import { ClothingItem, OutfitSection, OutfitSectionConfig, OutfitSortOption } from '@/types/clothing';
 import { cn } from '@/lib/utils';
 import {
   Select,
@@ -11,13 +11,14 @@ import {
 import { useMemo } from 'react';
 
 interface OutfitSectionCardProps {
-  sectionId: OutfitSection;
+  section: OutfitSectionConfig;
   items: ClothingItem[];
   selectedItemId?: string;
   onSelect: (itemId: string | undefined) => void;
   sortOption: OutfitSortOption;
   onSortChange: (sort: OutfitSortOption) => void;
   disabled?: boolean;
+  compact?: boolean;
 }
 
 const sortOptions: { value: OutfitSortOption; label: string }[] = [
@@ -28,17 +29,15 @@ const sortOptions: { value: OutfitSortOption; label: string }[] = [
 ];
 
 export function OutfitSectionCard({
-  sectionId,
+  section,
   items,
   selectedItemId,
   onSelect,
   sortOption,
   onSortChange,
   disabled = false,
+  compact = false,
 }: OutfitSectionCardProps) {
-  const section = OUTFIT_SECTIONS.find(s => s.id === sectionId)!;
-  const isMerged = section.mergedCategories.length > 1;
-
   const sortedItems = useMemo(() => {
     const sorted = [...items];
     switch (sortOption) {
@@ -92,37 +91,37 @@ export function OutfitSectionCard({
 
   return (
     <div className={cn(
-      "glass-card rounded-xl p-4 transition-all",
-      disabled && "opacity-50 pointer-events-none"
+      "glass-card rounded-xl p-3 transition-all",
+      disabled && "opacity-50 pointer-events-none",
+      compact && "p-2"
     )}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-medium text-foreground">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className={cn("font-medium text-foreground", compact && "text-sm")}>
           {section.label}
-          {isMerged && (
-            <span className="text-xs text-muted-foreground ml-1">(merged)</span>
-          )}
         </h3>
-        <Select value={sortOption} onValueChange={(v) => onSortChange(v as OutfitSortOption)}>
-          <SelectTrigger className="w-[120px] h-8 text-xs bg-background">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-popover z-50">
-            {sortOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {!compact && (
+          <Select value={sortOption} onValueChange={(v) => onSortChange(v as OutfitSortOption)}>
+            <SelectTrigger className="w-[100px] h-7 text-xs bg-background">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              {sortOptions.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <button
           onClick={handlePrev}
           disabled={sortedItems.length === 0}
-          className="p-2 rounded-lg bg-muted hover:bg-muted/80 disabled:opacity-30 transition-colors"
+          className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 disabled:opacity-30 transition-colors"
         >
-          <ChevronLeft className="w-5 h-5 text-foreground" />
+          <ChevronLeft className="w-4 h-4 text-foreground" />
         </button>
 
         <div className="flex-1 aspect-square relative rounded-lg overflow-hidden bg-muted border border-border">
@@ -133,28 +132,25 @@ export function OutfitSectionCard({
                 alt={selectedItem.subcategory}
                 className="w-full h-full object-cover animate-scale-in"
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/80 to-transparent p-2">
-                <p className="text-xs font-medium text-background truncate">
-                  {isMerged && (
-                    <span className="opacity-75">{selectedItem.category} · </span>
-                  )}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/80 to-transparent p-1.5">
+                <p className="text-[10px] font-medium text-background truncate">
                   {selectedItem.subcategory}
                 </p>
               </div>
               <button
                 onClick={handleClear}
-                className="absolute top-2 right-2 p-1 rounded bg-background/80 hover:bg-background text-foreground text-xs"
+                className="absolute top-1 right-1 p-0.5 rounded bg-background/80 hover:bg-background text-foreground text-[10px]"
               >
-                Clear
+                ✕
               </button>
             </>
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
-              <ImageOff className="w-8 h-8 mb-2" />
-              <p className="text-xs text-center px-2">
+              <ImageOff className="w-6 h-6 mb-1" />
+              <p className="text-[10px] text-center px-1">
                 {sortedItems.length === 0 
-                  ? 'No items available' 
-                  : 'Use arrows to select'}
+                  ? 'None' 
+                  : 'Select'}
               </p>
             </div>
           )}
@@ -163,17 +159,17 @@ export function OutfitSectionCard({
         <button
           onClick={handleNext}
           disabled={sortedItems.length === 0}
-          className="p-2 rounded-lg bg-muted hover:bg-muted/80 disabled:opacity-30 transition-colors"
+          className="p-1.5 rounded-lg bg-muted hover:bg-muted/80 disabled:opacity-30 transition-colors"
         >
-          <ChevronRight className="w-5 h-5 text-foreground" />
+          <ChevronRight className="w-4 h-4 text-foreground" />
         </button>
       </div>
 
-      <div className="mt-2 text-center text-xs text-muted-foreground">
+      <div className="mt-1 text-center text-[10px] text-muted-foreground">
         {sortedItems.length > 0 ? (
-          <span>{currentIndex >= 0 ? currentIndex + 1 : 0} / {sortedItems.length} items</span>
+          <span>{currentIndex >= 0 ? currentIndex + 1 : 0} / {sortedItems.length}</span>
         ) : (
-          <span>Add items to your closet</span>
+          <span>No items</span>
         )}
       </div>
     </div>

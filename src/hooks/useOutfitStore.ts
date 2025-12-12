@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Outfit, OutfitSection } from '@/types/clothing';
+import { Outfit } from '@/types/clothing';
 
 const STORAGE_KEY = 'clothing-tracker-outfits';
 

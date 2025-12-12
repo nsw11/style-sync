@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Shirt, ArrowLeft, Save, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Shirt, ArrowLeft, Save, Plus } from 'lucide-react';
 import { useClothingStore } from '@/hooks/useClothingStore';
 import { useOutfitStore } from '@/hooks/useOutfitStore';
 import { OutfitSectionCard } from '@/components/outfit/OutfitSectionCard';
@@ -17,9 +17,11 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { 
   OutfitSection, 
-  OUTFIT_SECTIONS, 
+  OUTFIT_GRID,
+  ADDITIONAL_ACCESSORY_SECTIONS,
   ClothingItem, 
-  OutfitSortOption 
+  OutfitSortOption,
+  OutfitSectionConfig,
 } from '@/types/clothing';
 
 const OutfitBuilder = () => {
@@ -29,40 +31,42 @@ const OutfitBuilder = () => {
 
   const [selectedItems, setSelectedItems] = useState<{ [key in OutfitSection]?: string }>({});
   const [sortOptions, setSortOptions] = useState<{ [key in OutfitSection]: OutfitSortOption }>({
-    hat: 'recent',
+    baseTop: 'recent',
     top: 'recent',
     outerwear: 'recent',
-    belt: 'recent',
+    baseBottom: 'recent',
     bottom: 'recent',
+    belt: 'recent',
+    socks: 'recent',
     shoes: 'recent',
-    accessories: 'recent',
+    hat: 'recent',
+    accessory: 'recent',
+    additionalAccessory1: 'recent',
+    additionalAccessory2: 'recent',
+    additionalAccessory3: 'recent',
   });
-  const [accessoriesEnabled, setAccessoriesEnabled] = useState(true);
+  const [additionalAccessoryCount, setAdditionalAccessoryCount] = useState(0);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [outfitName, setOutfitName] = useState('');
 
-  // Group items by merged categories
-  const itemsBySection = useMemo(() => {
-    const grouped: { [key in OutfitSection]: ClothingItem[] } = {
-      hat: [],
-      top: [],
-      outerwear: [],
-      belt: [],
-      bottom: [],
-      shoes: [],
-      accessories: [],
-    };
-
-    items.forEach(item => {
-      OUTFIT_SECTIONS.forEach(section => {
-        if (section.mergedCategories.includes(item.category)) {
-          grouped[section.id].push(item);
-        }
-      });
+  // Get items for a section based on category and optional subcategory filter
+  const getItemsForSection = (section: OutfitSectionConfig): ClothingItem[] => {
+    return items.filter(item => {
+      if (item.category !== section.category) return false;
+      
+      // If filterSubcategory is set, filter by subcategory prefix
+      if (section.filterSubcategory) {
+        return item.subcategory.startsWith(section.filterSubcategory);
+      }
+      
+      // For regular sections, exclude base layer items
+      if (section.category === 'Top' || section.category === 'Bottom') {
+        return !item.subcategory.startsWith('Base Layer');
+      }
+      
+      return true;
     });
-
-    return grouped;
-  }, [items]);
+  };
 
   // Get selected items as full objects for preview
   const selectedItemObjects = useMemo(() => {
@@ -92,6 +96,12 @@ const OutfitBuilder = () => {
     }));
   };
 
+  const handleAddAccessory = () => {
+    if (additionalAccessoryCount < 3) {
+      setAdditionalAccessoryCount(prev => prev + 1);
+    }
+  };
+
   const handleSave = () => {
     if (!outfitName.trim()) {
       toast({ 
@@ -102,15 +112,9 @@ const OutfitBuilder = () => {
       return;
     }
 
-    const outfitItems = { ...selectedItems };
-    if (!accessoriesEnabled) {
-      delete outfitItems.accessories;
-    }
-
     addOutfit({
       name: outfitName.trim(),
-      items: outfitItems,
-      accessoriesEnabled,
+      items: selectedItems,
     });
 
     toast({ 
@@ -121,9 +125,16 @@ const OutfitBuilder = () => {
     setShowSaveDialog(false);
     setOutfitName('');
     setSelectedItems({});
+    setAdditionalAccessoryCount(0);
   };
 
   const hasAnySelection = Object.values(selectedItems).some(id => id);
+
+  // Get all sections for save dialog display
+  const allSections: OutfitSectionConfig[] = [
+    ...OUTFIT_GRID.flat().filter(Boolean) as OutfitSectionConfig[],
+    ...ADDITIONAL_ACCESSORY_SECTIONS.slice(0, additionalAccessoryCount),
+  ];
 
   if (!clothingLoaded) {
     return (
@@ -169,45 +180,80 @@ const OutfitBuilder = () => {
       </header>
 
       <main className="container max-w-6xl mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-[1fr_300px] gap-6">
-          <div className="space-y-4">
-            {/* Accessories Toggle */}
-            <div className="flex items-center justify-end gap-2">
-              <span className="text-sm text-muted-foreground">Accessories</span>
-              <button
-                onClick={() => setAccessoriesEnabled(!accessoriesEnabled)}
-                className="text-primary"
-              >
-                {accessoriesEnabled ? (
-                  <ToggleRight className="w-8 h-8" />
-                ) : (
-                  <ToggleLeft className="w-8 h-8 text-muted-foreground" />
-                )}
-              </button>
-            </div>
+        <div className="grid lg:grid-cols-[1fr_280px] gap-6">
+          <div className="space-y-3">
+            {/* Outfit Grid - 4 rows x 3 columns */}
+            {OUTFIT_GRID.map((row, rowIndex) => (
+              <div key={rowIndex} className="grid grid-cols-3 gap-3">
+                {row.map((section, colIndex) => {
+                  // Handle empty cell
+                  if (!section) {
+                    // Row 4, Col 3 - Add accessory button
+                    if (rowIndex === 3 && colIndex === 2) {
+                      return (
+                        <div key="add-accessory" className="glass-card rounded-xl p-3 flex flex-col items-center justify-center">
+                          <p className="text-xs text-muted-foreground mb-2 text-center">Add Accessories</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAddAccessory}
+                            disabled={additionalAccessoryCount >= 3}
+                            className="gap-1"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Add ({additionalAccessoryCount}/3)
+                          </Button>
+                        </div>
+                      );
+                    }
+                    // Empty placeholder (Row 1, Col 1)
+                    return (
+                      <div key={`empty-${rowIndex}-${colIndex}`} className="glass-card rounded-xl p-3 opacity-30 flex items-center justify-center">
+                        <span className="text-xs text-muted-foreground">—</span>
+                      </div>
+                    );
+                  }
 
-            {/* Section Cards */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              {OUTFIT_SECTIONS.map((section) => (
-                <OutfitSectionCard
-                  key={section.id}
-                  sectionId={section.id}
-                  items={itemsBySection[section.id]}
-                  selectedItemId={selectedItems[section.id]}
-                  onSelect={(itemId) => handleSelectItem(section.id, itemId)}
-                  sortOption={sortOptions[section.id]}
-                  onSortChange={(sort) => handleSortChange(section.id, sort)}
-                  disabled={section.id === 'accessories' && !accessoriesEnabled}
-                />
-              ))}
-            </div>
+                  return (
+                    <OutfitSectionCard
+                      key={section.id}
+                      section={section}
+                      items={getItemsForSection(section)}
+                      selectedItemId={selectedItems[section.id]}
+                      onSelect={(itemId) => handleSelectItem(section.id, itemId)}
+                      sortOption={sortOptions[section.id]}
+                      onSortChange={(sort) => handleSortChange(section.id, sort)}
+                      compact
+                    />
+                  );
+                })}
+              </div>
+            ))}
+
+            {/* Additional Accessories Row */}
+            {additionalAccessoryCount > 0 && (
+              <div className="grid grid-cols-3 gap-3">
+                {ADDITIONAL_ACCESSORY_SECTIONS.slice(0, additionalAccessoryCount).map((section) => (
+                  <OutfitSectionCard
+                    key={section.id}
+                    section={section}
+                    items={getItemsForSection(section)}
+                    selectedItemId={selectedItems[section.id]}
+                    onSelect={(itemId) => handleSelectItem(section.id, itemId)}
+                    sortOption={sortOptions[section.id]}
+                    onSortChange={(sort) => handleSortChange(section.id, sort)}
+                    compact
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Preview Sidebar */}
           <div className="lg:sticky lg:top-24 lg:self-start">
             <OutfitPreview 
               selectedItems={selectedItemObjects} 
-              accessoriesEnabled={accessoriesEnabled}
+              additionalAccessoryCount={additionalAccessoryCount}
             />
           </div>
         </div>
@@ -235,9 +281,8 @@ const OutfitBuilder = () => {
 
             <div className="text-sm text-muted-foreground">
               <p>This outfit includes:</p>
-              <ul className="mt-1 space-y-1">
-                {OUTFIT_SECTIONS.map(section => {
-                  if (section.id === 'accessories' && !accessoriesEnabled) return null;
+              <ul className="mt-1 space-y-1 max-h-40 overflow-y-auto">
+                {allSections.map(section => {
                   const item = selectedItemObjects[section.id];
                   return (
                     <li key={section.id} className="flex items-center gap-2">
