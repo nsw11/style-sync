@@ -1,15 +1,36 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ClothingItem, Category, DEFAULT_SUBCATEGORIES, WearLog } from '@/types/clothing';
+import { toast } from 'sonner';
 
 const STORAGE_KEY = 'clothing-tracker-items';
 const CUSTOM_SUBCATEGORIES_KEY = 'clothing-tracker-custom-subcategories';
 
+// Helper to safely save to localStorage with error handling
+const safeLocalStorageSave = (key: string, data: string): boolean => {
+  try {
+    localStorage.setItem(key, data);
+    return true;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      toast.error('Storage limit reached. Try removing some items or using smaller images.');
+    } else {
+      toast.error('Failed to save data');
+    }
+    console.error('localStorage save error:', error);
+    return false;
+  }
+};
+
 export function useClothingStore() {
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [customSubcategories, setCustomSubcategories] = useState<Record<Category, string[]>>(() => {
-    const stored = localStorage.getItem(CUSTOM_SUBCATEGORIES_KEY);
-    if (stored) {
-      return JSON.parse(stored);
+    try {
+      const stored = localStorage.getItem(CUSTOM_SUBCATEGORIES_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Error loading custom subcategories:', e);
     }
     return {
       'Hat': [],
@@ -26,18 +47,23 @@ export function useClothingStore() {
 
   // Load items from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      setItems(parsed.map((item: ClothingItem) => ({
-        ...item,
-        wearLogs: (item.wearLogs || []).map((log: WearLog) => ({
-          ...log,
-          date: new Date(log.date),
-        })),
-        createdAt: new Date(item.createdAt),
-        updatedAt: new Date(item.updatedAt),
-      })));
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setItems(parsed.map((item: ClothingItem) => ({
+          ...item,
+          wearLogs: (item.wearLogs || []).map((log: WearLog) => ({
+            ...log,
+            date: new Date(log.date),
+          })),
+          createdAt: new Date(item.createdAt),
+          updatedAt: new Date(item.updatedAt),
+        })));
+      }
+    } catch (e) {
+      console.error('Error loading items:', e);
+      toast.error('Failed to load saved items');
     }
     setIsLoaded(true);
   }, []);
@@ -45,13 +71,13 @@ export function useClothingStore() {
   // Save items to localStorage
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      safeLocalStorageSave(STORAGE_KEY, JSON.stringify(items));
     }
   }, [items, isLoaded]);
 
   // Save custom subcategories
   useEffect(() => {
-    localStorage.setItem(CUSTOM_SUBCATEGORIES_KEY, JSON.stringify(customSubcategories));
+    safeLocalStorageSave(CUSTOM_SUBCATEGORIES_KEY, JSON.stringify(customSubcategories));
   }, [customSubcategories]);
 
   const getSubcategoriesForCategory = useCallback((category: Category): string[] => {
