@@ -39,6 +39,7 @@ export interface WearLog {
 
 export interface ClothingItem {
   id: string;
+  title?: string;
   image: string;
   category: Category;
   subcategory: string;
